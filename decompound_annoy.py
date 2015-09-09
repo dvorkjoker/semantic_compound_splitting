@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 __author__ = 'lqrz'
 
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
 import logging
 import pdb
 from nltk.corpus import PlaintextCorpusReader
@@ -10,139 +12,90 @@ import multiprocessing as mp
 import codecs
 from annoy import AnnoyIndex
 from sklearn.metrics.pairwise import cosine_similarity
+import gensim
 
-
-def decompound((inputCompound, nAccuracy, bestSimilarity)):
-
+def decompound(inputCompound, nAccuracy, similarityThreshold):
     global annoy_tree
     global vectors
-    global pickledIndexes
-    global pickledVectors
+    global model
     global globalNN
 
-
+    # 1. See if we can deal with compound
+    #
     if len(inputCompound) == 0:
         return []
 
-    try:
-        logger.debug('Looking up word '+inputCompound+' in index dict')
-        inputCompoundIndex = pickledIndexes[inputCompound]
-        logger.debug('Found key in index dict for word '+inputCompound)
-    except KeyError:
-        logger.debug('ERROR COULDNT FIND KEY '+inputCompound+' IN INDEX VECTOR')
-        # return [(inputCompound, 'Noinputrep', '')]
-        return [inputCompound]
+    logger.debug('Looking up word %s in Word2Vec model' % inputCompound)
+    if inputCompound not in model.vocab:  # We haven't vector representation for compound
+        logger.debug('ERROR COULDNT FIND KEY %s IN WORD2VEC MODEL' % inputCompound)
+        return []
+    logger.debug('Found key in index dict for word %s' % inputCompound)
+    inputCompoundRep = model[inputCompound]
+    inputCompoundIndex = model.vocab[inputCompound].index
 
-    try:
-        logger.debug('Looking up index '+str(inputCompoundIndex))
-        inputCompoundRep = pickledVectors[inputCompoundIndex]
-        logger.debug('Found key in vector dict for index '+str(inputCompoundIndex))
-    except KeyError:
-        logger.debug('ERROR COULDNT FIND KEY '+str(inputCompoundIndex)+' IN VECTOR DICT')
-        # return [(inputCompound, 'Noinputrep', '')]
-        return [inputCompound]
-
-    # get all matching prefixes
+    # 2. See if we have prefixes of compound in vocabulary
+    #
     logger.info('Getting all matching prefixes')
     prefixes = set()
     for prefix in vectors.keys():
-        found = inputCompound.find(prefix)
-        if found == 0 and len(vectors[prefix]) > 0 and len(inputCompound[len(prefix):])>0:
+        if len(inputCompound) > len(prefix) and inputCompound.startswith(prefix):
             prefixes.add(prefix)
-
-    logger.debug('Possible prefixes')
-    logger.debug(prefixes)
-
-    # get all possible splits
+    logger.debug('Possible prefixes: %r' % prefixes)
+    if len(prefixes) == 0:  # cannot split
+        return []
+    
+    # 3. Get all possible splits (so that we have representations for both prefix and tail)
+    #
     logger.info('Getting possible splits')
-
     splits = set()
-    splitsWithNoRep = set()
 
+    FUGENLAUTE = ['', 'e', 'es']
     for prefix in prefixes:
-        fugenlaute = ['', 'e', 'es']
-        for fug in fugenlaute:
-            if fug == '' or inputCompound[len(prefix):].find(fug) == 0:
-                if not debug:
-                    try:
-                        # look for the uppercased rest representation
-                        tail = inputCompound[len(prefix) + len(fug):].title()
-                        logger.debug('Tail: '+tail)
-                        tailRepresentationIndex = pickledIndexes[tail]
-                        logger.debug('Tail index: '+str(tailRepresentationIndex))
-                        splits.add((prefix, tail, tailRepresentationIndex))
-                        msg = ' '.join(['Considering split', inputCompound, prefix, tail])
-                        logger.debug(msg)
-                    except KeyError:
-                        # if i dont have a vector rep for the rest, i discard it
-                        splitsWithNoRep.add((prefix, tail))
-                        msg = ' '.join(['Discarding split', inputCompound, prefix, tail])
-                        logger.debug(msg)
-                    try:
-                        # look for the lowercased rest representation
-                        tail = inputCompound[len(prefix) + len(fug):]
-                        logger.debug('Tail: '+tail)
-                        tailRepresentationIndex = pickledIndexes[tail]
-                        logger.debug('Tail index: '+str(tailRepresentationIndex))
-                        splits.add((prefix, tail, tailRepresentationIndex))
-                        msg = ' '.join(['Considering split', inputCompound, prefix, tail])
-                        logger.debug(msg)
-                    except KeyError:
-                        # if i dont have a vector rep for the rest, i discard it
-                        msg = ' '.join(['Discarding split', inputCompound, prefix, tail])
-                        logger.debug(msg)
-                        splitsWithNoRep.add((prefix, tail))
-                        continue
+        rest = inputCompound[len(prefix):]
+
+        # get all possible tails
+        possible_tails = []
+        for fug in FUGENLAUTE:
+            if rest.startswith(fug):
+                possible_tails += [rest[len(fug):], rest[len(fug):].title()]
+
+        for tail in possible_tails:
+            logger.debug('Tail: %s' % tail)
+            if tail not in model.vocab:  # we haven't representation for this tail
+                logger.debug('Discarding split %s %s %s' % (inputCompound, prefix, tail))
+                continue
+            splits.add((prefix, tail))
+            logger.debug('Considering split %s %s %s' % (inputCompound, prefix, tail))
 
     if len(splits) == 0:
-        logger.error('Cannot decompound '+inputCompound)
-        # exit()
-        # return [(inputCompound, 'Notailrep', '')]
-        return [inputCompound]
+        logger.error('Cannot decompound %s' % inputCompound)
+        return []
 
-    # apply direction vectors to splits
+    # 4. See if retrieved splits are good in terms of word embeddings
+    #
+    result = []
     logger.info('Applying direction vectors to possible splits')
-    representations = set()
-    # bestSimilarity = 0.46 # so we do not split "Bahnhof" = ["Bahn", "Hof"]
-    best = None
-    maxEvidence = 0
-    bestEvidence = None
-    for prefix, tail, tailRepresentationIndex in splits:
-        msg = ' '.join(['Applying', str(len(vectors[prefix])), 'direction vectors to split', prefix, tail])
-        logger.debug(msg)
+
+    for prefix, tail in splits:
+        logger.debug('Applying %d directions vectors to split %s %s' % (len(vectors[prefix]), prefix, tail))
+
         for origin, evidence in vectors[prefix]:
-            logger.debug('Prefix '+prefix+' by indexes '+str(origin[0])+' and '+str(origin[1]))
-            try:
-                dirVectorCompoundRepresentation = pickledVectors[origin[0]]
-                logger.debug('Found key in vector dict for index '+str(origin[0]))
-            except KeyError:
-                logger.debug('ERROR COULDNT FIND KEY '+str(origin[0])+' IN VECTOR DICT')
-                continue
-
-            try:
-                dirVectorTailRepresentation = pickledVectors[origin[1]]
-                logger.debug('Found key in vector dict for index '+str(origin[1]))
-            except KeyError:
-                logger.debug('ERROR COULDNT FIND KEY '+str(origin[1])+' IN VECTOR DICT')
-                continue
-
+            logger.debug('Prefix %s by indexes %d and %d' % (prefix, origin[0], origin[1]))
+            #if origin[0] not in pickledVectors or origin[1] not in pickledVectors:
+            #    logger.debug('ERROR %d or %d NOT FOUND KEY IN VECTOR DICT' % (origin[0], origin[1]))
+            #    continue
+            dirVectorCompoundRepresentation = model[model.index2word[origin[0]]]
+            dirVectorTailRepresentation = model[model.index2word[origin[1]]] 
             dirVectorDifference = dirVectorCompoundRepresentation - dirVectorTailRepresentation
 
-            try:
-                logger.debug('Looking up tail index '+str(tailRepresentationIndex))
-                predictionRepresentation = pickledVectors[tailRepresentationIndex] + dirVectorDifference
-                logger.debug('Found key in vector dict for index '+str(tailRepresentationIndex))
-            except KeyError:
-                logger.debug('ERROR COULDNT FIND KEY '+str(tailRepresentationIndex)+' IN VECTOR DICT')
-                continue
-
-            # accuracy
-            # neighbours = sorted(model.most_similar(positive=[predictionRepresentation], negative=[], topn=nAccuracy), \
-            #                     key=lambda x: x[1], reverse=True)
+            #logger.debug('Looking up tail index %d' % tailRepresentationIndex)
+            #if tailRepresentationIndex not in pickledVectors:
+            #    logger.debug('ERROR COULDNT FIND KEY %d IN VECTOR DICT' % tailRepresentationIndex)
+            #    continue
+            predictionRepresentation = model[tail] + dirVectorDifference
 
             logger.debug('Getting Annoy KNN')
             try:
-                # neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), nAccuracy)
                 neighbours = annoy_tree.get_nns_by_vector(list(predictionRepresentation), globalNN)[:nAccuracy]
                 logger.debug(neighbours)
             except:
@@ -150,51 +103,90 @@ def decompound((inputCompound, nAccuracy, bestSimilarity)):
                 logger.error(list(predictionRepresentation))
                 exit()
 
-            try:
-                rank = [i for i, nei in enumerate(neighbours) if nei == inputCompoundIndex][0]
-                logger.debug(str(inputCompoundIndex)+' found in neighbours. Rank: '+str(rank))
-                similarity = cosine_similarity(predictionRepresentation, inputCompoundRep)[0][0]
-                logger.debug('Computed cosine similarity: '+str(similarity))
-                res = (prefix, tail, origin[0], origin[1], rank, similarity)
-                representations.add(res)
-                if similarity > bestSimilarity: # compare cosine similarity
-                    logger.debug('Found new best similarity score. Old: '+str(bestSimilarity)+' New: '+str(similarity))
-                    bestSimilarity = similarity
-                    best = res
-            except IndexError:
-                logger.debug(str(inputCompoundIndex)+' not found in neighbours. NO RANK. WONT SPLIT')
+            # find rank
+            rank = -1
+            for i, nei in enumerate(neighbours):
+                if nei == inputCompoundIndex:
+                    rank = i
+            if rank == -1:
+                logger.debug('%d not found in neighbours. NO RANK. WONT SPLIT' % inputCompoundIndex)
                 continue
-            # except IndexError:
-            #     splitsWithNoRep.add((prefix, tail))
-            #     res = (prefix, tail, origin[0], origin[1])
-            #     if len(evidence) > maxEvidence:
-            #         maxEvidence = len(evidence)
-            #         bestEvidence = res
-            #
-            #     continue
+            logger.debug('%d found in neighbours. Rank: %d' % (inputCompoundIndex, rank))
 
-    logger.debug('Choosing best direction vector')
-    chosenSplit = None
+            # compare cosine against threshold
+            similarity = cosine_similarity(predictionRepresentation, inputCompoundRep)[0][0]
+            logger.debug('Computed cosine similarity: %f' % similarity)
+            if similarity < similarityThreshold:
+                logger.debug('%d has too small cosine similarity, discarding' % inputCompoundIndex)
+                continue
 
-    if best:
-        chosenSplit = best
-        msg = ' '.join(['Splitting',inputCompound,'as', chosenSplit[0], chosenSplit[1], str(chosenSplit[2]), \
-                        str(chosenSplit[3]), 'rank', str(chosenSplit[4]), 'similarity', str(chosenSplit[5])])
-        logger.debug(msg)
-        logger.debug('Decompounding '+chosenSplit[1])
-    else:
-        # nobody got the original representation within the KNN
-        # chosenSplit = bestEvidence
-        # chosenSplit = (inputCompound, '') # not split at all
-        chosenSplit = (inputCompound, '') # not split at all
-        logger.debug('Not splitting compound '+inputCompound)
+            result.append((prefix, tail, origin[0], origin[1], rank, similarity))
+
+    return result
+
+vertices_count = 0
+distances = []
+edges = {}
 
 
-    # logging.debug('Found prefix '+chosenSplit[0])
-    # logging.debug('Decompounding '+chosenSplit[1])
+def get_decompound_lattice(inputCompound, nAccuracy, similarityThreshold):
+    global vertices_count
+    global distances
+    global edges
 
-    return [chosenSplit[0]] + decompound((chosenSplit[1], nAccuracy, bestSimilarity))
-    # return [(inputCompound, chosenSplit[0], chosenSplit[1])] # do not apply recursion
+    # 1. Initialize
+    #
+    vertices_count = 2
+    distances = [0, 1000.0] # distance to each vertix (for top sort)
+    edges = {0: [(1, inputCompound, 0, 1.0)]}  # from: (to, label, rank, cosine)
+
+    # 2. Make graph
+    #
+    def add_edges(from_, to, label):
+        global vertices_count
+        global distances
+        global edges
+
+        candidates = decompound(label, nAccuracy, similarityThreshold)
+        for index, candidate in enumerate(candidates):
+            prefix, tail, origin0, origin1, rank, similarity = candidate
+           
+            if from_ not in edges:
+                edges[from_] = []
+ 
+            edges[from_] += [(vertices_count, prefix, rank, similarity)]
+            edges[vertices_count] = [(to, tail, 0, 1.0)]
+          
+            try: 
+                distances.append(distances[from_] + (distances[to] - distances[from_]) * (1 + index) / (1 + len(candidates)))
+            except:
+                print(distances, from_, to, index, candidates)
+                raise
+            vertices_count += 1
+ 
+            add_edges(from_, vertices_count - 1, prefix)
+            add_edges(vertices_count - 1, to, tail)
+
+    add_edges(0, 1, inputCompound)
+
+    # 3. Top sort & output
+    #
+    vertices = zip(range(vertices_count), distances)
+    vertices = sorted(vertices, key=lambda x: x[1])
+    new_indexes = {}
+    for index, vertix in enumerate(vertices):
+        new_indexes[vertix[0]] = index
+   
+    lattice = '('  # '(\n'
+    for index, vertix in enumerate(vertices):
+        if vertix[0] not in edges:
+            continue
+        lattice += '('  # '  (\n'
+        for edge in edges[vertix[0]]:
+            lattice += '(\'%s\',%d,%f,%d),' % (edge[1], edge[2], edge[3], new_indexes[edge[0]] - index)
+        lattice += '),'
+    lattice += ')'
+    return lattice
 
 
 if __name__ == '__main__':
@@ -207,6 +199,24 @@ if __name__ == '__main__':
     logger.addHandler(hdlr)
     logger.setLevel(logging.DEBUG)
 
+
+    globalNN = 500
+    annoyTreeFile = '../../model/tree.ann'
+    w2vPath = '../../model/w2v_500_de.bin'
+    resultsPath = '../../model/prototypes/dir_vecs_10_100.p'
+    nAccuracy = 250
+    similarityThreshold = .0
+    vectors = pickle.load(open(resultsPath, 'rb'))
+    annoy_tree = AnnoyIndex(500)
+    annoy_tree.load(annoyTreeFile)
+    model = gensim.models.Word2Vec.load_word2vec_format(w2vPath, binary=True) 
+    print('Loaded!', file=sys.stderr)
+    for line in sys.stdin:
+        print(get_decompound_lattice(line.rstrip('\n'), nAccuracy, similarityThreshold))
+
+    exit(0)
+
+'''
     # resultsPath = 'results/dir_vecs_4_100.p'
     # annoyTreeFile = 'tree.ann'
     # pickledIndexes = pickle.load(open('decompoundIndexes.p','rb'))
@@ -297,3 +307,4 @@ if __name__ == '__main__':
     fout.close()
 
     logger.info('End')
+'''
