@@ -71,3 +71,11 @@ class Lattice(object):
         result = lattice.shortest_path()
         result.top_sort()
         return result
+
+     def get_features(self, span, compound):
+        label = compound[span[0]:span[1]]
+        for from_, val in self._lattice:
+            for to, l, features in val:
+                if label == l:
+                    return features
+        raise Exception("Span not found in the lattice")
