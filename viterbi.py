@@ -20,15 +20,40 @@ def acceptor_from_edges(edges, weights):
     result[1].final = True
     return result
 
-def lattice_to_split(viterbi_lattice):
-    result = []
-    for vertix in viterbi_lattice:
-        if not vertix.final:
-            for i, arc in enumerate(vertix.arcs):
-                assert(i == 0)
-                result += [viterbi_lattice.isyms.find(arc.ilabel)]
+def plf_to_lattice(lattice):
+    result = fst.Acceptor()
+    edges = list(ast.literal_eval(lattice)[1:])
+    end = 0
+    for i, val in enumerate(edges):
+        for target in val:
+            result.add_arc(i, i + target[2], target[0])
+            end = i + target[2]
+    result[end].final = True
     return result
-        
+
+def all_splits(lattice):
+    result = []
+    for path in lattice.paths():
+        result.append([lattice.isyms.find(arc.ilabel) for arc in path])
+    return result
+
+def golden_splits(s):
+    if s.startswith('#'):
+        # no ambiguity, just one split
+        return [s.split()[1:]]
+    return all_splits(plf_to_lattice(s))
+
+def split_to_footprint(compound, split):
+    result = []
+    current = compound.lower()
+    current_offset = 0
+    for span in split:
+        pos = current.find(span.lower())
+        assert(pos >= 0)
+        current = current[pos + len(span):]
+        result.append((current_offset + pos, current_offset + pos + len(span)))
+        current_offset += pos + len(span)
+    return result
 
 class Lattice(object):
     def __init__(self, arg):
@@ -46,4 +71,3 @@ class Lattice(object):
         result = lattice.shortest_path()
         result.top_sort()
         return result
-
