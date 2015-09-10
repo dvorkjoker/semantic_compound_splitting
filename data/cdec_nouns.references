@@ -14,12 +14,14 @@ wachstumsplänen ||| # wachstum plänen
 konsolidierung ||| # konsolidierung
 branche ||| # branche
 institut ||| # institut
-augenhöhe ||| ((('#',0,1),),(('auge',0,1),('augen',0,1),),(('höhe',0,1),),)
+augenhöhe ||| # auge höhe
+augenhöhe ||| # augen höhe
 wiederherstellung ||| # wiederherstellung
-grundstück ||| ((('#',0,1),),(('grund',0,1),('grundstück',0,2),),(('stück',0,1),),)
+grundstück ||| # grundstück
+grundstück ||| # grund stück
 ruhestand ||| # ruhestand
 widerstand ||| # widerstand
-versammlungsgesetz ||| ((('#',0,1),),(('versammlung',0,1),('versammlungs',0,1),),(('gesetz',0,1),),)
+versammlungsgesetz ||| # versammlung gesetz
 verstöße ||| # verstöße
 sachbeschädigung ||| # sach beschädigung
 vereinigungen ||| # vereinigungen
@@ -60,13 +62,13 @@ abbrucharbeiten ||| # abbruch arbeiten
 abergläubischen ||| # abergläubischen
 abfallbewirtschaftungshierarchie ||| # abfall bewirtschaftung hierarchie
 abfallbewirtschaftungsplänen ||| # abfall bewirtschaftung plänen
-abfertigungsgebühren ||| ((('#',0,1),),(('abfertigung',0,1),('abfertigungs',0,1),),(('gebühren',0,1),),)
-beitragsunabhängig ||| ((('#',0,1),),(('beitrag',0,1),('beitrags',0,1),),(('unabhängig',0,1),),)
-einreichungsfrist ||| ((('#',0,1),),(('einreichung',0,1),),(('frist',0,1),),)
+abfertigungsgebühren ||| # abfertigung gebühren
+beitragsunabhängig ||| # beitrag unabhängig
+einreichungsfrist ||| # einreichung frist
 europaabgeordnete ||| # europa abgeordnete
-früherkennungskampagnen ||| ((('#',0,1),),(('früh',0,1),),(('erkennung',0,1),('erkennungs',0,1),),(('kampagnen',0,1),),)
-hilfsagenturen ||| ((('#',0,1),),(('hilf',0,1),('hilfs',0,1),),(('agenturen',0,1),),)
-hilfsinstitutionen ||| ((('#',0,1),),(('hilf',0,1),('hilfs',0,1),),(('institutionen',0,1),),)
+früherkennungskampagnen ||| # früh erkennung kampagnen
+hilfsagenturen ||| # hilf agenturen
+hilfsinstitutionen ||| # hilf institution
 kaisergranat ||| # kaiser granat
 kalifornien ||| # kalifornien
 kampfflugzeug ||| # kampf flugzeug
@@ -389,7 +391,8 @@ klostergarten ||| # kloster garten
 befruchtungen ||| # befruchtungen
 zehntausende ||| # zehn tausende
 pflanzenhybriden ||| # pflanze hybriden
-fleißaufgabe ||| ((('#',0,1),),(('fleiß',0,1),('fleißaufgabe',0,2),),(('aufgabe',0,1),),)
+fleißaufgabe ||| # fleiß aufgabe
+fleißaufgabe ||| # fleißaufgabe
 hartnäckigkeit ||| # hartnäckigkeit
 naturforschers ||| # natur forschers
 innenminister ||| # innen minister
@@ -415,7 +418,7 @@ adventurer ||| # adventurer
 hongkong ||| # hongkong
 verlust ||| # verlust
 tonnen ||| # tonnen
-regierungschef ||| ((('#',0,1),),(('regierung',0,1),('regierungs',0,1),),(('chef',0,1),),)
+regierungschef ||| # regierung chef
 queensland ||| # queensland
 samstag ||| # samstag
 kapitän ||| # kapitän
@@ -429,23 +432,25 @@ touristenstrände ||| # touristen strände
 ostküste ||| # ost küste
 nördlich ||| # nördlich
 brisbane ||| # brisbane
-bestechungsversuch ||| ((('#',0,1),),(('bestechungs',0,1),('bestechung',0,1),),(('versuch',0,1),),)
+bestechungsversuch ||| # bestechung versuch
 campingkocher ||| # camping kocher
 integration ||| # integration
 funktechnik ||| # funk technik
 mobiltelefone ||| # mobil telefone
-aktenkoffers ||| ((('#',0,1),),(('akten',0,1),('aktenkoffers',0,2),),(('koffers',0,1),),)
+aktenkoffers ||| # akten koffers
 vorstufe ||| # vorstufe
-kohlendioxids ||| ((('#',0,1),),(('kohle',0,1),('kohlen',0,1),),(('dioxids',0,1),),)
+kohlendioxids ||| # kohle dioxids
+kohlendioxids ||| # kohlen dioxids
 computermodelle ||| # computer modelle
 schützen ||| # schützen
-climategate ||| ((('#',0,1),),(('climate',0,1),('climategate',0,2),),(('gate',0,1),),)
+climategate ||| # climategate
 skandal ||| # skandal
-forschungsinstitut ||| ((('#',0,1),),(('forschung',0,1),('forschungs',0,1),),(('institut',0,1),),)
+forschungsinstitut ||| # forschung institut
 climate ||| # climate
 research ||| # research
-folgenschwerste ||| ((('#',0,1),),(('folgenschwerste',0,2),('folgen',0,1),('folge',0,1),),(('schwerste',0,1),),)
-wissenschaftsdebatte ||| ((('#',0,1),),(('wissenschaft',0,1),('wissenschafts',0,1),),(('debatte',0,1),),)
+folgenschwerste ||| # folgen schwerste
+folgenschwerste ||| # folge schwerste
+wissenschaftsdebatte ||| # wissenschaft debatte
 computerhacker ||| # computer hacker
 instituts ||| # instituts
 forscher ||| # forscher
@@ -508,9 +513,9 @@ deutschland ||| # deutschland
 frankreich ||| # frankreich
 haltung ||| # haltung
 rumäniens ||| # rumäniens
-außenministerium ||| ((('#',0,1),),(('außen',0,1),),(('ministerium',0,1),),)
-präzedenzfall ||| ((('#',0,1),),(('präzedenzfall',0,2),('präzedenz',0,1),),(('fall',0,1),),)
-staatspräsident ||| ((('#',0,1),),(('staatspräsident',0,2),('staats',0,1),('staat',0,1),),(('präsident',0,1),),)
+außenministerium ||| # außen ministerium
+präzedenzfall ||| # präzedenz fall
+staatspräsident ||| # staat präsident
 georgi ||| # georgi
 parwanow ||| # parwanow
 verständnis ||| # verständnis
@@ -523,9 +528,9 @@ haltung ||| # haltung
 hintergrund ||| # hintergrund
 streits ||| # streits
 regierung ||| # regierung
-ministerpräsident ||| ((('#',0,1),),(('minister',0,1),),(('präsident',0,1),),)
-grenzkontrollen ||| ((('#',0,1),),(('grenz',0,1),),(('kontrollen',0,1),),)
-weltkrieg ||| ((('#',0,1),),(('welt',0,1),('weltkrieg',0,2),),(('krieg',0,1),),)
+ministerpräsident ||| # minister präsident
+grenzkontrollen ||| # grenz kontrollen
+weltkrieg ||| # welt krieg
 abwehr ||| # abwehr
 admirals ||| # admirals
 canaris ||| # canaris
@@ -534,8 +539,8 @@ apfelsinenkisten ||| # apfelsine kisten
 hafenarbeiter ||| # hafen arbeiter
 schiffe ||| # schiffe
 zeiten ||| # zeiten
-militärdiktatur ||| ((('#',0,1),),(('militär',0,1),),(('diktatur',0,1),),)
-widerstandsgruppe ||| ((('#',0,1),),(('widerstand',0,1),('widerstands',0,1),),(('gruppe',0,1),),)
+militärdiktatur ||| # militär diktatur
+widerstandsgruppe ||| # widerstand gruppe
 pfirsiche ||| # pfirsiche
 aprikosen ||| # aprikosen
 vergiftet ||| # vergiftet
@@ -551,23 +556,23 @@ online ||| # online
 sprach ||| # sprach
 menschenrechte ||| # menschen rechte
 heimat ||| # heimat
-kaufrausch ||| ((('#',0,1),),(('kauf',0,1),),(('rausch',0,1),),)
+kaufrausch ||| # kauf rausch
 kommerzialisierung ||| # kommerzialisierung
 weihnachten ||| # weihnachten
 wikileaks ||| # wikileaks
-verfassungsgericht ||| ((('#',0,1),),(('verfassung',0,1),('verfassungs',0,1),),(('gericht',0,1),),)
+verfassungsgericht ||| # verfassung gericht
 berlusconis ||| # berlusconis
 immunität ||| # immunität
 zinspolitik ||| # zins politik
 inflation ||| # inflation
-eurozone ||| ((('#',0,1),),(('euro',0,1),('eurozone',0,2),),(('zone',0,1),),)
+eurozone ||| # euro zone
 kontrolle ||| # kontrolle
 futtermittelindustrie ||| # futter mittel industrie
 deutschland ||| # deutschland
 regierung ||| # regierung
 vertrauen ||| # vertrauen
 westerwelle ||| # westerwelle
-abzugsdatum ||| ((('#',0,1),),(('abzugs',0,1),('abzug',0,1),),(('datum',0,1),),)
+abzugsdatum ||| # abzug datum
 ghettoblaster ||| # ghetto blaster
 alltag ||| # alltag
 ikonen ||| # ikonen
@@ -581,9 +586,10 @@ mittelschicht ||| # mittel schicht
 jahrzehnts ||| # jahrzehnts
 billionen ||| # billionen
 dollar ||| # dollar
-erbrauchsniveau ||| ((('#',0,1),),(('erbrauch',0,1),('erbrauchs',0,1),),(('niveau',0,1),),)
+erbrauchsniveau ||| # erbrauch niveau
 staaten ||| # staaten
-schwellenländer ||| ((('#',0,1),),(('schwellen',0,1),('schwelle',0,1),),(('länder',0,1),),)
+schwellenländer ||| # schwellen länder
+schwellenländer ||| # schwelle länder
 brasilien ||| # brasilien
 russland ||| # russland
 indien ||| # indien
